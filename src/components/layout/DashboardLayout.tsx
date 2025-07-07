@@ -15,7 +15,7 @@ const DashboardLayout = ({ children, currentRole, onLogout }: DashboardLayoutPro
     switch (currentRole) {
       case "counselor": return "text-emerald-600";
       case "student": return "text-blue-600";
-      case "mentor": return "text-purple-600";
+      case "admin": return "text-purple-600";
       default: return "text-gray-600";
     }
   };
@@ -24,7 +24,7 @@ const DashboardLayout = ({ children, currentRole, onLogout }: DashboardLayoutPro
     switch (currentRole) {
       case "counselor": return "bg-emerald-50 border-emerald-200";
       case "student": return "bg-blue-50 border-blue-200";
-      case "mentor": return "bg-purple-50 border-purple-200";
+      case "admin": return "bg-purple-50 border-purple-200";
       default: return "bg-gray-50 border-gray-200";
     }
   };

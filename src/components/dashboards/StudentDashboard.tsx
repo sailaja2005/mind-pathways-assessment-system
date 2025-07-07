@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,11 +27,38 @@ const StudentDashboard = () => {
 
   const loadStudentAssessment = (name: string, rollNumber: string) => {
     const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
+    console.log('All assessments:', assessments);
+    console.log('Looking for:', { name: name.toLowerCase().trim(), rollNumber: rollNumber.trim() });
+    
     const studentAssess = assessments.find(
-      (assessment: any) => 
-        assessment.studentName.toLowerCase() === name.toLowerCase() && 
-        assessment.rollNumber === rollNumber
+      (assessment: any) => {
+        const assessmentName = assessment.studentName.toLowerCase().trim();
+        const assessmentRoll = assessment.rollNumber.trim();
+        const searchName = name.toLowerCase().trim();
+        const searchRoll = rollNumber.trim();
+        
+        console.log('Comparing:', { assessmentName, assessmentRoll, searchName, searchRoll });
+        
+        return assessmentName === searchName && assessmentRoll === searchRoll;
+      }
     );
+    
+    console.log('Found assessment:', studentAssess);
+    
+    // If assessment exists but doesn't have approved status, auto-approve it
+    if (studentAssess && !studentAssess.status) {
+      studentAssess.status = 'approved';
+      // Update the assessment in localStorage
+      const updatedAssessments = assessments.map((assessment: any) => {
+        if (assessment.studentName.toLowerCase().trim() === name.toLowerCase().trim() && 
+            assessment.rollNumber.trim() === rollNumber.trim()) {
+          return { ...assessment, status: 'approved' };
+        }
+        return assessment;
+      });
+      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+    }
+    
     setStudentAssessment(studentAssess || null);
   };
 
@@ -49,9 +75,14 @@ const StudentDashboard = () => {
     // Check if assessment exists for this student
     const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
     const studentAssess = assessments.find(
-      (assessment: any) => 
-        assessment.studentName.toLowerCase() === loginData.name.toLowerCase() && 
-        assessment.rollNumber === loginData.rollNumber
+      (assessment: any) => {
+        const assessmentName = assessment.studentName.toLowerCase().trim();
+        const assessmentRoll = assessment.rollNumber.trim();
+        const searchName = loginData.name.toLowerCase().trim();
+        const searchRoll = loginData.rollNumber.trim();
+        
+        return assessmentName === searchName && assessmentRoll === searchRoll;
+      }
     );
 
     if (!studentAssess) {
@@ -61,6 +92,19 @@ const StudentDashboard = () => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Auto-approve the assessment if not already approved
+    if (!studentAssess.status) {
+      studentAssess.status = 'approved';
+      const updatedAssessments = assessments.map((assessment: any) => {
+        if (assessment.studentName.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
+            assessment.rollNumber.trim() === loginData.rollNumber.trim()) {
+          return { ...assessment, status: 'approved' };
+        }
+        return assessment;
+      });
+      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
     }
 
     setStudentAssessment(studentAssess);
@@ -85,8 +129,8 @@ const StudentDashboard = () => {
       // Update the assessment to mark test as completed
       const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
       const updatedAssessments = assessments.map((assessment: any) => {
-        if (assessment.studentName.toLowerCase() === loginData.name.toLowerCase() && 
-            assessment.rollNumber === loginData.rollNumber) {
+        if (assessment.studentName.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
+            assessment.rollNumber.trim() === loginData.rollNumber.trim()) {
           return { ...assessment, testCompleted: true, testCompletionDate: new Date().toISOString().split('T')[0] };
         }
         return assessment;
