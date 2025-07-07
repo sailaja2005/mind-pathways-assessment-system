@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, BarChart3, TrendingUp, Eye } from "lucide-react";
@@ -87,7 +86,7 @@ const AdminDashboard = () => {
                             style={{ width: `${(Number(score) / 5) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium w-8">{score}</span>
+                        <span className="text-sm font-medium w-8">{String(score)}</span>
                       </div>
                     </div>
                   ))}
