@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, FileText, BarChart3, Clock, CheckCircle, AlertCircle, User, Hash } from "lucide-react";
+import { Brain, FileText, BarChart3, Clock, CheckCircle, AlertCircle, User, Hash, XCircle } from "lucide-react";
 import PersonalityTest from "@/components/assessment/PersonalityTest";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,21 +45,6 @@ const StudentDashboard = () => {
     );
     
     console.log('Found assessment:', studentAssess);
-    
-    // If assessment exists but doesn't have approved status, auto-approve it
-    if (studentAssess && !studentAssess.status) {
-      studentAssess.status = 'approved';
-      // Update the assessment in localStorage
-      const updatedAssessments = assessments.map((assessment: any) => {
-        if (assessment.studentName.toLowerCase().trim() === name.toLowerCase().trim() && 
-            assessment.rollNumber.trim() === rollNumber.trim()) {
-          return { ...assessment, status: 'approved' };
-        }
-        return assessment;
-      });
-      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
-    }
-    
     setStudentAssessment(studentAssess || null);
   };
 
@@ -94,19 +80,6 @@ const StudentDashboard = () => {
       return;
     }
 
-    // Auto-approve the assessment if not already approved
-    if (!studentAssess.status) {
-      studentAssess.status = 'approved';
-      const updatedAssessments = assessments.map((assessment: any) => {
-        if (assessment.studentName.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
-            assessment.rollNumber.trim() === loginData.rollNumber.trim()) {
-          return { ...assessment, status: 'approved' };
-        }
-        return assessment;
-      });
-      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
-    }
-
     setStudentAssessment(studentAssess);
     setIsLoggedIn(true);
     localStorage.setItem('studentLogin', JSON.stringify(loginData));
@@ -126,17 +99,8 @@ const StudentDashboard = () => {
 
   const handleTestComplete = () => {
     if (studentAssessment) {
-      // Update the assessment to mark test as completed
-      const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
-      const updatedAssessments = assessments.map((assessment: any) => {
-        if (assessment.studentName.toLowerCase().trim() === loginData.name.toLowerCase().trim() && 
-            assessment.rollNumber.trim() === loginData.rollNumber.trim()) {
-          return { ...assessment, testCompleted: true, testCompletionDate: new Date().toISOString().split('T')[0] };
-        }
-        return assessment;
-      });
-      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
-      setStudentAssessment({ ...studentAssessment, testCompleted: true });
+      // Reload the assessment to get updated data
+      loadStudentAssessment(loginData.name, loginData.rollNumber);
     }
     setShowTest(false);
   };
@@ -235,7 +199,7 @@ const StudentDashboard = () => {
                       <span className="font-medium">Test Completed</span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      You have successfully completed the personality assessment. Your results are being processed.
+                      You have successfully completed the personality assessment. Your results have been processed and are available below.
                     </p>
                     <div className="bg-green-50 p-3 rounded-lg">
                       <p className="text-sm text-green-700">Completed on: {studentAssessment.testCompletionDate}</p>
@@ -248,23 +212,23 @@ const StudentDashboard = () => {
                       <span className="font-medium">Approved for Testing</span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Your counselor has approved you for the personality assessment. This test will help identify your personality traits and provide insights for your academic and career development.
+                      Your counselor has approved you for the personality assessment. This comprehensive test contains 50 questions divided into 5 sections and will help identify your personality traits.
                     </p>
                     <Button onClick={() => setShowTest(true)} className="w-full bg-blue-600 hover:bg-blue-700">
-                      Take Personality Test
+                      Start Personality Test (50 Questions)
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex items-center text-amber-600">
-                      <Clock className="h-5 w-5 mr-2" />
-                      <span className="font-medium">Assessment Under Review</span>
+                      <XCircle className="h-5 w-5 mr-2" />
+                      <span className="font-medium">Awaiting Counselor Approval</span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Your counselor has completed your assessment and it's currently being reviewed for test approval.
+                      Your counselor has completed your assessment but you are not yet approved for testing. Please wait for approval or contact your counselor.
                     </p>
                     <Button disabled className="w-full">
-                      Test Approval Pending
+                      Awaiting Counselor Approval
                     </Button>
                   </div>
                 )}
@@ -309,6 +273,47 @@ const StudentDashboard = () => {
         </Card>
       </div>
 
+      {studentAssessment && studentAssessment.testCompleted && studentAssessment.personalityScores && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+              Your Personality Test Results
+            </CardTitle>
+            <CardDescription>Big Five Personality Traits Analysis</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {Object.entries(studentAssessment.personalityScores).map(([trait, score]) => (
+                <div key={trait} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <span className="text-sm capitalize font-medium">{trait}:</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-purple-600 h-3 rounded-full" 
+                        style={{ width: `${(Number(score) / 5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium w-10">{Number(score).toFixed(1)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {studentAssessment.personalityAnalysis && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-3">Personalized Analysis & Recommendations</h4>
+                <ul className="space-y-2">
+                  {studentAssessment.personalityAnalysis.map((analysis: string, index: number) => (
+                    <li key={index} className="text-sm text-gray-700">• {analysis}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -330,7 +335,7 @@ const StudentDashboard = () => {
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h4 className={`font-semibold ${studentAssessment.testCompleted ? 'text-gray-900' : 'text-gray-500'}`}>
-                      Big Five Personality Test
+                      Big Five Personality Test (50 Questions)
                     </h4>
                     <p className="text-sm text-gray-600">
                       {studentAssessment.testCompleted 

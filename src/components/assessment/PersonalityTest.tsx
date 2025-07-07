@@ -24,35 +24,60 @@ const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
       { text: "I am fascinated by abstract or theoretical problems in engineering.", reverse: false },
       { text: "I prefer sticking to familiar methods rather than experimenting with new approaches.", reverse: true },
       { text: "I often imagine creative ways to solve technical problems.", reverse: false },
-      { text: "I find it exciting to learn about emerging technologies in my field.", reverse: false }
+      { text: "I find it exciting to learn about emerging technologies in my field.", reverse: false },
+      { text: "I enjoy brainstorming innovative solutions during group projects.", reverse: false },
+      { text: "I am uninterested in exploring untested engineering techniques.", reverse: true },
+      { text: "I like to challenge conventional approaches to technical problems.", reverse: false },
+      { text: "I find theoretical discussions about engineering boring.", reverse: true },
+      { text: "I am curious about how new technologies can improve existing systems.", reverse: false }
     ],
     "Conscientiousness": [
       { text: "I always complete my assignments and projects on time.", reverse: false },
       { text: "I pay close attention to details when working on technical tasks.", reverse: false },
       { text: "I tend to procrastinate on important tasks.", reverse: true },
       { text: "I plan my work carefully to ensure high-quality results.", reverse: false },
-      { text: "I feel responsible for ensuring my team meets project goals.", reverse: false }
+      { text: "I feel responsible for ensuring my team meets project goals.", reverse: false },
+      { text: "I organize my study materials and workspace efficiently.", reverse: false },
+      { text: "I often leave tasks unfinished until the last minute.", reverse: true },
+      { text: "I double-check my calculations to avoid errors in my work.", reverse: false },
+      { text: "I struggle to follow through on long-term project plans.", reverse: true },
+      { text: "I take pride in delivering precise and accurate engineering work.", reverse: false }
     ],
     "Extraversion": [
       { text: "I enjoy working in group settings on engineering projects.", reverse: false },
       { text: "I feel energized when presenting my ideas to others.", reverse: false },
       { text: "I prefer working alone rather than in a team.", reverse: true },
       { text: "I am comfortable taking the lead in group discussions or projects.", reverse: false },
-      { text: "I find it easy to network with professionals in my field.", reverse: false }
+      { text: "I find it easy to network with professionals in my field.", reverse: false },
+      { text: "I enjoy socializing with classmates during project work.", reverse: false },
+      { text: "I feel drained after group meetings or presentations.", reverse: true },
+      { text: "I actively participate in class discussions or team brainstorming.", reverse: false },
+      { text: "I avoid initiating conversations with new people in my field.", reverse: true },
+      { text: "I feel confident speaking up during engineering team meetings.", reverse: false }
     ],
     "Agreeableness": [
       { text: "I enjoy helping my peers solve technical problems.", reverse: false },
       { text: "I try to understand others' perspectives during team conflicts.", reverse: false },
       { text: "I prioritize my own goals over the team's needs.", reverse: true },
       { text: "I am patient when explaining complex engineering concepts to others.", reverse: false },
-      { text: "I value maintaining positive relationships with my project teammates.", reverse: false }
+      { text: "I value maintaining positive relationships with my project teammates.", reverse: false },
+      { text: "I willingly compromise to reach team agreements.", reverse: false },
+      { text: "I find it hard to empathize with teammates' challenges.", reverse: true },
+      { text: "I offer support to struggling team members during projects.", reverse: false },
+      { text: "I tend to dominate team discussions rather than collaborate.", reverse: true },
+      { text: "I respect differing opinions during engineering group work.", reverse: false }
     ],
     "Neuroticism": [
       { text: "I often feel stressed when facing tight project deadlines.", reverse: false },
       { text: "I remain calm when troubleshooting complex engineering issues.", reverse: true },
       { text: "I worry about making mistakes in my work.", reverse: false },
       { text: "I feel confident in my ability to handle unexpected technical challenges.", reverse: true },
-      { text: "I tend to get anxious when presenting my work to others.", reverse: false }
+      { text: "I tend to get anxious when presenting my work to others.", reverse: false },
+      { text: "I feel overwhelmed when managing multiple engineering tasks.", reverse: false },
+      { text: "I stay composed during high-pressure project situations.", reverse: true },
+      { text: "I frequently doubt my ability to succeed in engineering challenges.", reverse: false },
+      { text: "I handle unexpected setbacks in projects with ease.", reverse: true },
+      { text: "I feel nervous when receiving feedback on my work.", reverse: false }
     ]
   };
 
@@ -81,20 +106,84 @@ const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
     }
   };
 
-  const handleTestCompletion = () => {
-    // Calculate scores
+  const calculateScores = () => {
     const scores: Record<string, number> = {};
     for (const [trait, responseArray] of Object.entries(responses)) {
       scores[trait] = responseArray.reduce((sum, score) => sum + score, 0) / responseArray.length;
     }
+    return scores;
+  };
+
+  const generateAnalysis = (scores: Record<string, number>) => {
+    const analysis = [];
+    
+    if (scores["Openness"] >= 4.0) {
+      analysis.push("High Openness: You are highly creative and curious, ideal for innovative engineering fields like R&D or product design. Pursue projects involving emerging technologies or experimental designs.");
+    } else if (scores["Openness"] <= 2.5) {
+      analysis.push("Low Openness: You prefer familiar methods, suitable for roles like quality control or process engineering. Explore new tools or workshops to boost creativity.");
+    }
+
+    if (scores["Conscientiousness"] >= 4.0) {
+      analysis.push("High Conscientiousness: Your strong work ethic and organization make you well-suited for project management or detail-oriented tasks like circuit design or systems engineering.");
+    } else if (scores["Conscientiousness"] <= 2.5) {
+      analysis.push("Low Conscientiousness: You may struggle with deadlines or organization. Use planning tools (e.g., Trello, calendars) to improve time management.");
+    }
+
+    if (scores["Extraversion"] >= 4.0) {
+      analysis.push("High Extraversion: You thrive in team settings and leadership roles, ideal for client-facing or project lead positions in engineering.");
+    } else if (scores["Extraversion"] <= 2.5) {
+      analysis.push("Low Extraversion: You prefer solo work, which suits tasks like coding or design. Join group projects or clubs to develop collaboration skills.");
+    }
+
+    if (scores["Agreeableness"] >= 4.0) {
+      analysis.push("High Agreeableness: Your cooperative and empathetic nature is excellent for multidisciplinary team projects. Leverage this in collaborative engineering tasks.");
+    } else if (scores["Agreeableness"] <= 2.5) {
+      analysis.push("Low Agreeableness: You may prioritize personal goals over team needs. Practice active listening and compromise to improve team dynamics.");
+    }
+
+    if (scores["Neuroticism"] >= 4.0) {
+      analysis.push("High Neuroticism: You may feel stressed or anxious under pressure. Practice stress management techniques (e.g., mindfulness, time management) to handle tight deadlines.");
+    } else if (scores["Neuroticism"] <= 2.5) {
+      analysis.push("Low Neuroticism: Your emotional stability is a strength in high-pressure engineering environments like systems troubleshooting or crisis management.");
+    }
+
+    return analysis;
+  };
+
+  const handleTestCompletion = () => {
+    const finalScores = calculateScores();
+    const analysis = generateAnalysis(finalScores);
+    
+    // Update the student's assessment with test completion and results
+    const storedLogin = localStorage.getItem('studentLogin');
+    if (storedLogin) {
+      const loginInfo = JSON.parse(storedLogin);
+      const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
+      
+      const updatedAssessments = assessments.map((assessment: any) => {
+        if (assessment.studentName.toLowerCase().trim() === loginInfo.name.toLowerCase().trim() && 
+            assessment.rollNumber.trim() === loginInfo.rollNumber.trim()) {
+          return { 
+            ...assessment, 
+            testCompleted: true, 
+            testCompletionDate: new Date().toISOString().split('T')[0],
+            personalityScores: finalScores,
+            personalityAnalysis: analysis
+          };
+        }
+        return assessment;
+      });
+      
+      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+    }
 
     toast({
-      title: "Test Completed!",
-      description: "Your personality assessment has been completed successfully. Thank you for your participation.",
+      title: "Test Completed Successfully!",
+      description: "Your Big Five personality assessment has been completed. Results have been saved and analysis generated.",
     });
 
-    // In a real application, this would send data to the backend
-    console.log("Final scores:", scores);
+    console.log("Final scores:", finalScores);
+    console.log("Analysis:", analysis);
     
     if (onComplete) {
       onComplete();
@@ -122,8 +211,9 @@ const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
             <span>Big Five Personality Test</span>
           </CardTitle>
           <div className="text-center text-gray-600">
-            <p className="font-semibold">{currentTraitName}</p>
-            <p className="text-sm">Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)</p>
+            <p className="font-semibold">{currentTraitName} - Section {currentTrait + 1} of {traits.length}</p>
+            <p className="text-sm">Question {currentQuestion + 1} of {questions[currentTraitName as keyof typeof questions].length} in this section</p>
+            <p className="text-sm mt-1">Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)</p>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 

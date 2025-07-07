@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, BarChart3, TrendingUp, Eye } from "lucide-react";
+import { Users, BarChart3, TrendingUp, Eye, CheckCircle, Clock } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useEffect } from "react";
 
@@ -20,6 +21,15 @@ const AdminDashboard = () => {
 
   const handleBackToTable = () => {
     setSelectedStudent(null);
+  };
+
+  const handleApprovalToggle = (studentIndex: number) => {
+    const updatedStudents = [...students];
+    updatedStudents[studentIndex].status = updatedStudents[studentIndex].status === 'approved' ? 'pending' : 'approved';
+    updatedStudents[studentIndex].approved = updatedStudents[studentIndex].status === 'approved';
+    
+    setStudents(updatedStudents);
+    localStorage.setItem('submittedAssessments', JSON.stringify(updatedStudents));
   };
 
   if (selectedStudent) {
@@ -93,6 +103,19 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
+            {selectedStudent.personalityAnalysis && (
+              <div className="mt-6">
+                <h4 className="font-semibold mb-3 text-blue-700">Personality Analysis</h4>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <ul className="space-y-2">
+                    {selectedStudent.personalityAnalysis.map((analysis: string, index: number) => (
+                      <li key={index} className="text-sm text-gray-700">• {analysis}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -106,7 +129,7 @@ const AdminDashboard = () => {
         <p className="text-gray-600">Monitor student progress and manage assessments</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
@@ -123,7 +146,7 @@ const AdminDashboard = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
-              <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
+              <CheckCircle className="h-5 w-5 mr-2 text-blue-600" />
               Tests Approved
             </CardTitle>
           </CardHeader>
@@ -149,6 +172,21 @@ const AdminDashboard = () => {
             <p className="text-sm text-gray-600">Assessments finished</p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-lg">
+              <Clock className="h-5 w-5 mr-2 text-amber-600" />
+              Pending Approval
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-amber-600">
+              {students.filter(s => s.status !== 'approved' && !s.testCompleted).length}
+            </div>
+            <p className="text-sm text-gray-600">Awaiting approval</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -170,7 +208,7 @@ const AdminDashboard = () => {
                   <TableHead>Student Name</TableHead>
                   <TableHead>Roll Number</TableHead>
                   <TableHead>Submission Date</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Approval Status</TableHead>
                   <TableHead>Test Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -182,11 +220,21 @@ const AdminDashboard = () => {
                     <TableCell>{student.rollNumber}</TableCell>
                     <TableCell>{student.submissionDate}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        student.status === 'approved' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {student.status === 'approved' ? 'Approved' : 'Pending'}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          student.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {student.status === 'approved' ? 'Approved' : 'Pending'}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleApprovalToggle(index)}
+                          className="text-xs"
+                        >
+                          {student.status === 'approved' ? 'Revoke' : 'Approve'}
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
