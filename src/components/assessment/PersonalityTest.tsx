@@ -9,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface PersonalityTestProps {
   onBack: () => void;
+  onComplete?: () => void;
 }
 
-const PersonalityTest = ({ onBack }: PersonalityTestProps) => {
+const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
   const { toast } = useToast();
   const [currentTrait, setCurrentTrait] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -89,12 +90,17 @@ const PersonalityTest = ({ onBack }: PersonalityTestProps) => {
 
     toast({
       title: "Test Completed!",
-      description: "Your personality assessment has been completed. Results will be available shortly.",
+      description: "Your personality assessment has been completed successfully. Thank you for your participation.",
     });
 
     // In a real application, this would send data to the backend
     console.log("Final scores:", scores);
-    onBack();
+    
+    if (onComplete) {
+      onComplete();
+    } else {
+      onBack();
+    }
   };
 
   return (

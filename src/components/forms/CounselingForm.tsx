@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,7 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
   const [formData, setFormData] = useState({
     // General Information
     studentName: "",
+    rollNumber: "",
     age: "",
     gender: "",
     address: "",
@@ -99,7 +99,10 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
     memory: "",
     intelligence: "",
     judgement: "",
-    abstraction: ""
+    abstraction: "",
+    
+    // Counselor's final remarks
+    counselorRemarks: ""
   });
 
   const handleInputChange = (field: string, value: string | string[]) => {
@@ -123,10 +126,34 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
   };
 
   const handleSubmit = () => {
+    if (!formData.studentName.trim() || !formData.rollNumber.trim()) {
+      toast({
+        title: "Required Information Missing",
+        description: "Please fill in the student's name and roll number before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Save the assessment data to localStorage
+    const existingAssessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
+    
+    const newAssessment = {
+      ...formData,
+      submissionDate: new Date().toISOString().split('T')[0],
+      status: 'approved', // Automatically approve for testing
+      testCompleted: false,
+      counselorRemarks: formData.counselorRemarks || `Student ${formData.studentName} has been assessed and approved for personality testing. The assessment shows good indicators for proceeding with the Big Five personality test.`
+    };
+
+    const updatedAssessments = [...existingAssessments, newAssessment];
+    localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+
     toast({
-      title: "Form Submitted",
-      description: "Student assessment has been submitted successfully. The student will be notified about test approval.",
+      title: "Assessment Submitted Successfully",
+      description: `Assessment for ${formData.studentName} has been completed and approved for personality testing. The student can now login to take the test.`,
     });
+    
     onBack();
   };
 
@@ -157,8 +184,22 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
                   value={formData.studentName}
                   onChange={(e) => handleInputChange("studentName", e.target.value)}
                   className="mt-1"
+                  placeholder="e.g., Neha Alpani"
                 />
               </div>
+              <div>
+                <Label htmlFor="rollNumber">Roll Number *</Label>
+                <Input
+                  id="rollNumber"
+                  value={formData.rollNumber}
+                  onChange={(e) => handleInputChange("rollNumber", e.target.value)}
+                  className="mt-1"
+                  placeholder="e.g., 2024001"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="age">Age *</Label>
                 <Input
@@ -494,7 +535,33 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
           </div>
         );
 
-      // Add other sections here (3-7)...
+      case 7:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-emerald-700">7) Counselor's Remarks and Recommendation</h3>
+            
+            <div>
+              <Label htmlFor="counselorRemarks">Final Assessment and Recommendations</Label>
+              <Textarea
+                id="counselorRemarks"
+                value={formData.counselorRemarks}
+                onChange={(e) => handleInputChange("counselorRemarks", e.target.value)}
+                className="mt-1"
+                rows={6}
+                placeholder="Provide your professional assessment, recommendations, and approval for personality testing..."
+              />
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">Assessment Completion</h4>
+              <p className="text-sm text-blue-700">
+                By submitting this form, you are approving <strong>{formData.studentName || "the student"}</strong> for personality testing. 
+                The student will be able to log in using their name and roll number to access the Big Five Personality Test.
+              </p>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-6">
@@ -548,7 +615,7 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
               {currentSection === totalSections ? (
                 <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700">
                   <Send className="h-4 w-4 mr-2" />
-                  Submit Assessment
+                  Submit & Approve for Testing
                 </Button>
               ) : (
                 <Button onClick={nextSection} className="bg-emerald-600 hover:bg-emerald-700">
