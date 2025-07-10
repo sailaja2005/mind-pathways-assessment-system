@@ -14,7 +14,252 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      counseling_assessments: {
+        Row: {
+          abstraction: string | null
+          address: string | null
+          age: string | null
+          annual_income: string | null
+          approach_of_student: string | null
+          approach_towards_faculty: string | null
+          appropriateness: string | null
+          approved: boolean
+          circumstantial: string | null
+          cleanliness_habit: string | null
+          communication: string | null
+          congruity_with: string | null
+          consciousness_of_surroundings: string | null
+          counselor_remarks: string | null
+          created_at: string
+          delusions: string | null
+          diurnal_variations: string | null
+          dress_sense: string | null
+          eating_habit: string | null
+          education: string | null
+          family_history: string | null
+          father_email: string | null
+          father_mobile: string | null
+          father_name: string | null
+          father_occupation: string | null
+          flight_of_ideas: string | null
+          form_of_utterances: string | null
+          gender: string | null
+          guardian_email: string | null
+          guardian_mobile: string | null
+          guardian_name: string | null
+          guardian_occupation: string | null
+          hallucinations: string | null
+          id: string
+          in_touch_with_surroundings: string | null
+          insight: string | null
+          intelligence: string | null
+          intensity_of_expression: string | null
+          judgement: string | null
+          leadership_pattern: string | null
+          level_of_awareness: string | null
+          liability: string | null
+          mannerism: string | null
+          memory: string | null
+          mood: string | null
+          mother_email: string | null
+          mother_mobile: string | null
+          mother_name: string | null
+          mother_occupation: string | null
+          obsession: string | null
+          orientation: string | null
+          personality_analysis: string[] | null
+          personality_scores: Json | null
+          preservation: string | null
+          prosody: string | null
+          range: string | null
+          reaction_time: string | null
+          reactivity: string | null
+          relevance_and_coherence: string | null
+          responsiveness_of_student: string | null
+          retardation_of_thinking: string | null
+          role_of_function: string[] | null
+          roll_number: string
+          sin_and_guilt: string | null
+          sleeping_habit: string | null
+          socio_economic_status: string | null
+          speech: string | null
+          speech_mannerism: string | null
+          spontaneous: string | null
+          status: string
+          student_email: string | null
+          student_mobile: string | null
+          student_name: string
+          submission_date: string
+          test_completed: boolean
+          test_completion_date: string | null
+          thought_blocks: string | null
+          tone: string | null
+          updated_at: string
+        }
+        Insert: {
+          abstraction?: string | null
+          address?: string | null
+          age?: string | null
+          annual_income?: string | null
+          approach_of_student?: string | null
+          approach_towards_faculty?: string | null
+          appropriateness?: string | null
+          approved?: boolean
+          circumstantial?: string | null
+          cleanliness_habit?: string | null
+          communication?: string | null
+          congruity_with?: string | null
+          consciousness_of_surroundings?: string | null
+          counselor_remarks?: string | null
+          created_at?: string
+          delusions?: string | null
+          diurnal_variations?: string | null
+          dress_sense?: string | null
+          eating_habit?: string | null
+          education?: string | null
+          family_history?: string | null
+          father_email?: string | null
+          father_mobile?: string | null
+          father_name?: string | null
+          father_occupation?: string | null
+          flight_of_ideas?: string | null
+          form_of_utterances?: string | null
+          gender?: string | null
+          guardian_email?: string | null
+          guardian_mobile?: string | null
+          guardian_name?: string | null
+          guardian_occupation?: string | null
+          hallucinations?: string | null
+          id?: string
+          in_touch_with_surroundings?: string | null
+          insight?: string | null
+          intelligence?: string | null
+          intensity_of_expression?: string | null
+          judgement?: string | null
+          leadership_pattern?: string | null
+          level_of_awareness?: string | null
+          liability?: string | null
+          mannerism?: string | null
+          memory?: string | null
+          mood?: string | null
+          mother_email?: string | null
+          mother_mobile?: string | null
+          mother_name?: string | null
+          mother_occupation?: string | null
+          obsession?: string | null
+          orientation?: string | null
+          personality_analysis?: string[] | null
+          personality_scores?: Json | null
+          preservation?: string | null
+          prosody?: string | null
+          range?: string | null
+          reaction_time?: string | null
+          reactivity?: string | null
+          relevance_and_coherence?: string | null
+          responsiveness_of_student?: string | null
+          retardation_of_thinking?: string | null
+          role_of_function?: string[] | null
+          roll_number: string
+          sin_and_guilt?: string | null
+          sleeping_habit?: string | null
+          socio_economic_status?: string | null
+          speech?: string | null
+          speech_mannerism?: string | null
+          spontaneous?: string | null
+          status?: string
+          student_email?: string | null
+          student_mobile?: string | null
+          student_name: string
+          submission_date?: string
+          test_completed?: boolean
+          test_completion_date?: string | null
+          thought_blocks?: string | null
+          tone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          abstraction?: string | null
+          address?: string | null
+          age?: string | null
+          annual_income?: string | null
+          approach_of_student?: string | null
+          approach_towards_faculty?: string | null
+          appropriateness?: string | null
+          approved?: boolean
+          circumstantial?: string | null
+          cleanliness_habit?: string | null
+          communication?: string | null
+          congruity_with?: string | null
+          consciousness_of_surroundings?: string | null
+          counselor_remarks?: string | null
+          created_at?: string
+          delusions?: string | null
+          diurnal_variations?: string | null
+          dress_sense?: string | null
+          eating_habit?: string | null
+          education?: string | null
+          family_history?: string | null
+          father_email?: string | null
+          father_mobile?: string | null
+          father_name?: string | null
+          father_occupation?: string | null
+          flight_of_ideas?: string | null
+          form_of_utterances?: string | null
+          gender?: string | null
+          guardian_email?: string | null
+          guardian_mobile?: string | null
+          guardian_name?: string | null
+          guardian_occupation?: string | null
+          hallucinations?: string | null
+          id?: string
+          in_touch_with_surroundings?: string | null
+          insight?: string | null
+          intelligence?: string | null
+          intensity_of_expression?: string | null
+          judgement?: string | null
+          leadership_pattern?: string | null
+          level_of_awareness?: string | null
+          liability?: string | null
+          mannerism?: string | null
+          memory?: string | null
+          mood?: string | null
+          mother_email?: string | null
+          mother_mobile?: string | null
+          mother_name?: string | null
+          mother_occupation?: string | null
+          obsession?: string | null
+          orientation?: string | null
+          personality_analysis?: string[] | null
+          personality_scores?: Json | null
+          preservation?: string | null
+          prosody?: string | null
+          range?: string | null
+          reaction_time?: string | null
+          reactivity?: string | null
+          relevance_and_coherence?: string | null
+          responsiveness_of_student?: string | null
+          retardation_of_thinking?: string | null
+          role_of_function?: string[] | null
+          roll_number?: string
+          sin_and_guilt?: string | null
+          sleeping_habit?: string | null
+          socio_economic_status?: string | null
+          speech?: string | null
+          speech_mannerism?: string | null
+          spontaneous?: string | null
+          status?: string
+          student_email?: string | null
+          student_mobile?: string | null
+          student_name?: string
+          submission_date?: string
+          test_completed?: boolean
+          test_completion_date?: string | null
+          thought_blocks?: string | null
+          tone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

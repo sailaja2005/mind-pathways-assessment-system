@@ -1,10 +1,11 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { CounselingFormData } from "./types/counselingFormTypes";
+import { mapFormDataToDatabase } from "@/utils/counselingFormMapper";
 import GeneralInformationSection from "./sections/GeneralInformationSection";
 import FamilyHistorySection from "./sections/FamilyHistorySection";
 import GeneralBehaviourSection from "./sections/GeneralBehaviourSection";
@@ -21,6 +22,7 @@ interface CounselingFormProps {
 const CounselingForm = ({ onBack }: CounselingFormProps) => {
   const { toast } = useToast();
   const [currentSection, setCurrentSection] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSections = 7;
 
   const [formData, setFormData] = useState<CounselingFormData>({
@@ -124,14 +126,59 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
     }
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Progress Saved",
-      description: "Your form data has been saved successfully.",
-    });
+  const handleSave = async () => {
+    if (!formData.studentName.trim() || !formData.rollNumber.trim()) {
+      toast({
+        title: "Required Information Missing",
+        description: "Please fill in the student's name and roll number before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const dbData = mapFormDataToDatabase(formData);
+      
+      // Check if assessment already exists
+      const { data: existingAssessment } = await supabase
+        .from('counseling_assessments')
+        .select('id')
+        .eq('student_name', formData.studentName)
+        .eq('roll_number', formData.rollNumber)
+        .single();
+
+      if (existingAssessment) {
+        // Update existing assessment
+        const { error } = await supabase
+          .from('counseling_assessments')
+          .update(dbData)
+          .eq('id', existingAssessment.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new assessment
+        const { error } = await supabase
+          .from('counseling_assessments')
+          .insert([dbData]);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Progress Saved",
+        description: "Your form data has been saved successfully to the database.",
+      });
+    } catch (error) {
+      console.error('Error saving assessment:', error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your progress. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.studentName.trim() || !formData.rollNumber.trim()) {
       toast({
         title: "Required Information Missing",
@@ -141,26 +188,64 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
       return;
     }
 
-    // Save the assessment data to localStorage
-    const existingAssessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
-    
-    const newAssessment = {
-      ...formData,
-      submissionDate: new Date().toISOString().split('T')[0],
-      status: formData.approved ? 'approved' : 'pending',
-      testCompleted: false,
-      counselorRemarks: formData.counselorRemarks || `Student ${formData.studentName} has been assessed and ${formData.approved ? 'approved' : 'is awaiting approval'} for personality testing.`
-    };
+    setIsSubmitting(true);
 
-    const updatedAssessments = [...existingAssessments, newAssessment];
-    localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+    try {
+      const dbData = mapFormDataToDatabase(formData);
+      
+      // Check if assessment already exists
+      const { data: existingAssessment } = await supabase
+        .from('counseling_assessments')
+        .select('id')
+        .eq('student_name', formData.studentName)
+        .eq('roll_number', formData.rollNumber)
+        .single();
 
-    toast({
-      title: "Assessment Submitted Successfully",
-      description: `Assessment for ${formData.studentName} has been completed${formData.approved ? ' and approved for personality testing. The student can now login to take the test.' : ' and is awaiting approval.'}`,
-    });
-    
-    onBack();
+      if (existingAssessment) {
+        // Update existing assessment
+        const { error } = await supabase
+          .from('counseling_assessments')
+          .update(dbData)
+          .eq('id', existingAssessment.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new assessment
+        const { error } = await supabase
+          .from('counseling_assessments')
+          .insert([dbData]);
+
+        if (error) throw error;
+      }
+
+      // Also keep the localStorage backup for compatibility (remove this later if not needed)
+      const existingAssessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
+      const newAssessment = {
+        ...formData,
+        submissionDate: new Date().toISOString().split('T')[0],
+        status: formData.approved ? 'approved' : 'pending',
+        testCompleted: false,
+        counselorRemarks: formData.counselorRemarks || `Student ${formData.studentName} has been assessed and ${formData.approved ? 'approved' : 'is awaiting approval'} for personality testing.`
+      };
+      const updatedAssessments = [...existingAssessments, newAssessment];
+      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+
+      toast({
+        title: "Assessment Submitted Successfully",
+        description: `Assessment for ${formData.studentName} has been completed${formData.approved ? ' and approved for personality testing. The student can now login to take the test.' : ' and is awaiting approval.'}`,
+      });
+      
+      onBack();
+    } catch (error) {
+      console.error('Error submitting assessment:', error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting the assessment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextSection = () => {
@@ -234,6 +319,7 @@ const CounselingForm = ({ onBack }: CounselingFormProps) => {
             onNext={nextSection}
             onSave={handleSave}
             onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
           />
         </CardContent>
       </Card>
