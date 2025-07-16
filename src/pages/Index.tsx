@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserCheck, Users, GraduationCap, Brain, FileText, BarChart3 } from "lucide-react";
+import { UserCheck, Users, GraduationCap, Brain, FileText, BarChart3, Shield } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import CounselorDashboard from "@/components/dashboards/CounselorDashboard";
 import StudentDashboard from "@/components/dashboards/StudentDashboard";
+import AdminDashboard from "@/components/dashboards/AdminDashboard";
 import EnhancedMentorDashboard from "@/components/dashboards/EnhancedMentorDashboard";
 
 const Index = () => {
@@ -28,6 +29,7 @@ const Index = () => {
         {currentRole === "counselor" && <CounselorDashboard />}
         {currentRole === "student" && <StudentDashboard />}
         {currentRole === "mentor" && <EnhancedMentorDashboard />}
+        {currentRole === "admin" && <AdminDashboard />}
       </DashboardLayout>
     );
   }
@@ -49,7 +51,7 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+        <div className="grid md:grid-cols-4 gap-8 max-w-8xl mx-auto mb-12">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleRoleSelection("counselor")}>
             <CardHeader className="text-center">
               <div className="bg-emerald-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 group-hover:bg-emerald-200 transition-colors">
@@ -139,6 +141,37 @@ const Index = () => {
               </ul>
               <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
                 Enter as Mentor
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => handleRoleSelection("admin")}>
+            <CardHeader className="text-center">
+              <div className="bg-orange-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 group-hover:bg-orange-200 transition-colors">
+                <Shield className="h-10 w-10 text-orange-600" />
+              </div>
+              <CardTitle className="text-2xl">Admin Portal</CardTitle>
+              <CardDescription>
+                Comprehensive oversight of all student assessments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <Users className="h-4 w-4 mr-2 text-orange-500" />
+                  View all students and mentors
+                </li>
+                <li className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2 text-orange-500" />
+                  Monitor test completion rates
+                </li>
+                <li className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2 text-orange-500" />
+                  Access detailed analysis reports
+                </li>
+              </ul>
+              <Button className="w-full mt-4 bg-orange-600 hover:bg-orange-700">
+                Enter as Admin
               </Button>
             </CardContent>
           </Card>
