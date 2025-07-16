@@ -6,7 +6,7 @@ import { UserCheck, Users, GraduationCap, Brain, FileText, BarChart3 } from "luc
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import CounselorDashboard from "@/components/dashboards/CounselorDashboard";
 import StudentDashboard from "@/components/dashboards/StudentDashboard";
-import MentorDashboard from "@/components/dashboards/MentorDashboard";
+import EnhancedMentorDashboard from "@/components/dashboards/EnhancedMentorDashboard";
 
 const Index = () => {
   const [currentRole, setCurrentRole] = useState<string | null>(null);
@@ -27,7 +27,7 @@ const Index = () => {
       <DashboardLayout currentRole={currentRole} onLogout={handleLogout}>
         {currentRole === "counselor" && <CounselorDashboard />}
         {currentRole === "student" && <StudentDashboard />}
-        {currentRole === "mentor" && <MentorDashboard />}
+        {currentRole === "mentor" && <EnhancedMentorDashboard />}
       </DashboardLayout>
     );
   }

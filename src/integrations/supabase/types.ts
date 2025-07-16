@@ -29,6 +29,7 @@ export type Database = {
           communication: string | null
           congruity_with: string | null
           consciousness_of_surroundings: string | null
+          counselor_id: string | null
           counselor_remarks: string | null
           created_at: string
           delusions: string | null
@@ -87,6 +88,7 @@ export type Database = {
           spontaneous: string | null
           status: string
           student_email: string | null
+          student_id: string | null
           student_mobile: string | null
           student_name: string
           submission_date: string
@@ -110,6 +112,7 @@ export type Database = {
           communication?: string | null
           congruity_with?: string | null
           consciousness_of_surroundings?: string | null
+          counselor_id?: string | null
           counselor_remarks?: string | null
           created_at?: string
           delusions?: string | null
@@ -168,6 +171,7 @@ export type Database = {
           spontaneous?: string | null
           status?: string
           student_email?: string | null
+          student_id?: string | null
           student_mobile?: string | null
           student_name: string
           submission_date?: string
@@ -191,6 +195,7 @@ export type Database = {
           communication?: string | null
           congruity_with?: string | null
           consciousness_of_surroundings?: string | null
+          counselor_id?: string | null
           counselor_remarks?: string | null
           created_at?: string
           delusions?: string | null
@@ -249,6 +254,7 @@ export type Database = {
           spontaneous?: string | null
           status?: string
           student_email?: string | null
+          student_id?: string | null
           student_mobile?: string | null
           student_name?: string
           submission_date?: string
@@ -256,6 +262,252 @@ export type Database = {
           test_completion_date?: string | null
           thought_blocks?: string | null
           tone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counseling_assessments_counselor_id_fkey"
+            columns: ["counselor_id"]
+            isOneToOne: false
+            referencedRelation: "counselors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counseling_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counselors: {
+        Row: {
+          created_at: string
+          department: string | null
+          employee_id: string | null
+          id: string
+          qualifications: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          id?: string
+          qualifications?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          id?: string
+          qualifications?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_questions: {
+        Row: {
+          created_at: string
+          id: string
+          is_reverse_scored: boolean | null
+          question_order: number
+          question_text: string
+          trait_category: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_reverse_scored?: boolean | null
+          question_order: number
+          question_text: string
+          trait_category: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_reverse_scored?: boolean | null
+          question_order?: number
+          question_text?: string
+          trait_category?: string
+        }
+        Relationships: []
+      }
+      personality_responses: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string | null
+          response_value: number
+          student_id: string | null
+          test_session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          response_value: number
+          student_id?: string | null
+          test_session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          response_value?: number
+          student_id?: string | null
+          test_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personality_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_responses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_results: {
+        Row: {
+          agreeableness_score: number
+          analysis_text: string[] | null
+          completed_at: string
+          conscientiousness_score: number
+          created_at: string
+          extraversion_score: number
+          id: string
+          neuroticism_score: number
+          openness_score: number
+          student_id: string | null
+          test_session_id: string
+        }
+        Insert: {
+          agreeableness_score: number
+          analysis_text?: string[] | null
+          completed_at?: string
+          conscientiousness_score: number
+          created_at?: string
+          extraversion_score: number
+          id?: string
+          neuroticism_score: number
+          openness_score: number
+          student_id?: string | null
+          test_session_id: string
+        }
+        Update: {
+          agreeableness_score?: number
+          analysis_text?: string[] | null
+          completed_at?: string
+          conscientiousness_score?: number
+          created_at?: string
+          extraversion_score?: number
+          id?: string
+          neuroticism_score?: number
+          openness_score?: number
+          student_id?: string | null
+          test_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          address: string | null
+          age: string | null
+          created_at: string
+          education: string | null
+          gender: string | null
+          id: string
+          mobile: string | null
+          roll_number: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: string | null
+          created_at?: string
+          education?: string | null
+          gender?: string | null
+          id?: string
+          mobile?: string | null
+          roll_number: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: string | null
+          created_at?: string
+          education?: string | null
+          gender?: string | null
+          id?: string
+          mobile?: string | null
+          roll_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          role?: string
           updated_at?: string
         }
         Relationships: []
