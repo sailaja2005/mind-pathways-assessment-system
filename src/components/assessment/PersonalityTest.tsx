@@ -1,85 +1,28 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import questionsData from "@/data/questions.json";
 
 interface PersonalityTestProps {
   onBack: () => void;
   onComplete?: () => void;
+  studentId?: string;
 }
 
-const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
+const PersonalityTest = ({ onBack, onComplete, studentId }: PersonalityTestProps) => {
   const { toast } = useToast();
   const [currentTrait, setCurrentTrait] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<Record<string, number[]>>({});
+  const [testSessionId] = useState(() => crypto.randomUUID());
 
-  const questions = {
-    "Openness": [
-      { text: "I enjoy exploring new ideas and concepts, even if they seem unconventional.", reverse: false },
-      { text: "I am fascinated by abstract or theoretical problems in engineering.", reverse: false },
-      { text: "I prefer sticking to familiar methods rather than experimenting with new approaches.", reverse: true },
-      { text: "I often imagine creative ways to solve technical problems.", reverse: false },
-      { text: "I find it exciting to learn about emerging technologies in my field.", reverse: false },
-      { text: "I enjoy brainstorming innovative solutions during group projects.", reverse: false },
-      { text: "I am uninterested in exploring untested engineering techniques.", reverse: true },
-      { text: "I like to challenge conventional approaches to technical problems.", reverse: false },
-      { text: "I find theoretical discussions about engineering boring.", reverse: true },
-      { text: "I am curious about how new technologies can improve existing systems.", reverse: false }
-    ],
-    "Conscientiousness": [
-      { text: "I always complete my assignments and projects on time.", reverse: false },
-      { text: "I pay close attention to details when working on technical tasks.", reverse: false },
-      { text: "I tend to procrastinate on important tasks.", reverse: true },
-      { text: "I plan my work carefully to ensure high-quality results.", reverse: false },
-      { text: "I feel responsible for ensuring my team meets project goals.", reverse: false },
-      { text: "I organize my study materials and workspace efficiently.", reverse: false },
-      { text: "I often leave tasks unfinished until the last minute.", reverse: true },
-      { text: "I double-check my calculations to avoid errors in my work.", reverse: false },
-      { text: "I struggle to follow through on long-term project plans.", reverse: true },
-      { text: "I take pride in delivering precise and accurate engineering work.", reverse: false }
-    ],
-    "Extraversion": [
-      { text: "I enjoy working in group settings on engineering projects.", reverse: false },
-      { text: "I feel energized when presenting my ideas to others.", reverse: false },
-      { text: "I prefer working alone rather than in a team.", reverse: true },
-      { text: "I am comfortable taking the lead in group discussions or projects.", reverse: false },
-      { text: "I find it easy to network with professionals in my field.", reverse: false },
-      { text: "I enjoy socializing with classmates during project work.", reverse: false },
-      { text: "I feel drained after group meetings or presentations.", reverse: true },
-      { text: "I actively participate in class discussions or team brainstorming.", reverse: false },
-      { text: "I avoid initiating conversations with new people in my field.", reverse: true },
-      { text: "I feel confident speaking up during engineering team meetings.", reverse: false }
-    ],
-    "Agreeableness": [
-      { text: "I enjoy helping my peers solve technical problems.", reverse: false },
-      { text: "I try to understand others' perspectives during team conflicts.", reverse: false },
-      { text: "I prioritize my own goals over the team's needs.", reverse: true },
-      { text: "I am patient when explaining complex engineering concepts to others.", reverse: false },
-      { text: "I value maintaining positive relationships with my project teammates.", reverse: false },
-      { text: "I willingly compromise to reach team agreements.", reverse: false },
-      { text: "I find it hard to empathize with teammates' challenges.", reverse: true },
-      { text: "I offer support to struggling team members during projects.", reverse: false },
-      { text: "I tend to dominate team discussions rather than collaborate.", reverse: true },
-      { text: "I respect differing opinions during engineering group work.", reverse: false }
-    ],
-    "Neuroticism": [
-      { text: "I often feel stressed when facing tight project deadlines.", reverse: false },
-      { text: "I remain calm when troubleshooting complex engineering issues.", reverse: true },
-      { text: "I worry about making mistakes in my work.", reverse: false },
-      { text: "I feel confident in my ability to handle unexpected technical challenges.", reverse: true },
-      { text: "I tend to get anxious when presenting my work to others.", reverse: false },
-      { text: "I feel overwhelmed when managing multiple engineering tasks.", reverse: false },
-      { text: "I stay composed during high-pressure project situations.", reverse: true },
-      { text: "I frequently doubt my ability to succeed in engineering challenges.", reverse: false },
-      { text: "I handle unexpected setbacks in projects with ease.", reverse: true },
-      { text: "I feel nervous when receiving feedback on my work.", reverse: false }
-    ]
-  };
+  const questions = questionsData as Record<string, Array<{ text: string; reverse: boolean }>>;
 
   const traits = Object.keys(questions);
   const currentTraitName = traits[currentTrait];
@@ -150,45 +93,94 @@ const PersonalityTest = ({ onBack, onComplete }: PersonalityTestProps) => {
     return analysis;
   };
 
-  const handleTestCompletion = () => {
+  const handleTestCompletion = async () => {
     const finalScores = calculateScores();
     const analysis = generateAnalysis(finalScores);
     
-    // Update the student's assessment with test completion and results
-    const storedLogin = localStorage.getItem('studentLogin');
-    if (storedLogin) {
-      const loginInfo = JSON.parse(storedLogin);
-      const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
-      
-      const updatedAssessments = assessments.map((assessment: any) => {
-        if (assessment.studentName.toLowerCase().trim() === loginInfo.name.toLowerCase().trim() && 
-            assessment.rollNumber.trim() === loginInfo.rollNumber.trim()) {
-          return { 
-            ...assessment, 
-            testCompleted: true, 
-            testCompletionDate: new Date().toISOString().split('T')[0],
-            personalityScores: finalScores,
-            personalityAnalysis: analysis
-          };
-        }
-        return assessment;
+    try {
+      // Save responses to personality_responses table
+      const responsePromises = Object.entries(responses).map(async ([trait, responseArray]) => {
+        const traitQuestions = questions[trait];
+        
+        return Promise.all(
+          responseArray.map(async (responseValue, index) => {
+            const { error } = await supabase
+              .from('personality_responses')
+              .insert({
+                test_session_id: testSessionId,
+                student_id: studentId,
+                response_value: responseValue,
+                question_id: null // We'll use question order and trait for identification
+              });
+            
+            if (error) throw error;
+          })
+        );
       });
-      
-      localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
-    }
 
-    toast({
-      title: "Test Completed Successfully!",
-      description: "Your Big Five personality assessment has been completed. Results have been saved and analysis generated.",
-    });
+      await Promise.all(responsePromises);
 
-    console.log("Final scores:", finalScores);
-    console.log("Analysis:", analysis);
-    
-    if (onComplete) {
-      onComplete();
-    } else {
-      onBack();
+      // Save results to personality_results table
+      const { error: resultError } = await supabase
+        .from('personality_results')
+        .insert({
+          test_session_id: testSessionId,
+          student_id: studentId,
+          openness_score: finalScores.Openness,
+          conscientiousness_score: finalScores.Conscientiousness,
+          extraversion_score: finalScores.Extraversion,
+          agreeableness_score: finalScores.Agreeableness,
+          neuroticism_score: finalScores.Neuroticism,
+          analysis_text: analysis,
+          detailed_analysis: {
+            scores: finalScores,
+            analysis: analysis,
+            test_date: new Date().toISOString()
+          }
+        });
+
+      if (resultError) throw resultError;
+
+      // Also update localStorage for backward compatibility
+      const storedLogin = localStorage.getItem('studentLogin');
+      if (storedLogin) {
+        const loginInfo = JSON.parse(storedLogin);
+        const assessments = JSON.parse(localStorage.getItem('submittedAssessments') || '[]');
+        
+        const updatedAssessments = assessments.map((assessment: any) => {
+          if (assessment.studentName.toLowerCase().trim() === loginInfo.name.toLowerCase().trim() && 
+              assessment.rollNumber.trim() === loginInfo.rollNumber.trim()) {
+            return { 
+              ...assessment, 
+              testCompleted: true, 
+              testCompletionDate: new Date().toISOString().split('T')[0],
+              personalityScores: finalScores,
+              personalityAnalysis: analysis
+            };
+          }
+          return assessment;
+        });
+        
+        localStorage.setItem('submittedAssessments', JSON.stringify(updatedAssessments));
+      }
+
+      toast({
+        title: "Test Completed Successfully!",
+        description: "Your Big Five personality assessment has been completed. Results have been saved and analysis generated.",
+      });
+
+      if (onComplete) {
+        onComplete();
+      } else {
+        onBack();
+      }
+    } catch (error) {
+      console.error('Error saving test results:', error);
+      toast({
+        title: "Error Saving Results",
+        description: "There was an error saving your test results. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 

@@ -106,7 +106,13 @@ const StudentDashboard = () => {
   };
 
   if (showTest) {
-    return <PersonalityTest onBack={() => setShowTest(false)} onComplete={handleTestComplete} />;
+    return (
+      <PersonalityTest 
+        onBack={() => setShowTest(false)} 
+        onComplete={handleTestComplete}
+        studentId={studentAssessment?.studentId}
+      />
+    );
   }
 
   if (!isLoggedIn) {

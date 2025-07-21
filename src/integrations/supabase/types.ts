@@ -319,6 +319,36 @@ export type Database = {
           },
         ]
       }
+      mentors: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string | null
+          employee_id: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          employee_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          employee_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       personality_questions: {
         Row: {
           created_at: string
@@ -395,6 +425,7 @@ export type Database = {
           completed_at: string
           conscientiousness_score: number
           created_at: string
+          detailed_analysis: Json | null
           extraversion_score: number
           id: string
           neuroticism_score: number
@@ -408,6 +439,7 @@ export type Database = {
           completed_at?: string
           conscientiousness_score: number
           created_at?: string
+          detailed_analysis?: Json | null
           extraversion_score: number
           id?: string
           neuroticism_score: number
@@ -421,6 +453,7 @@ export type Database = {
           completed_at?: string
           conscientiousness_score?: number
           created_at?: string
+          detailed_analysis?: Json | null
           extraversion_score?: number
           id?: string
           neuroticism_score?: number
@@ -440,36 +473,42 @@ export type Database = {
       }
       students: {
         Row: {
+          academic_year: number | null
           address: string | null
           age: string | null
           created_at: string
           education: string | null
           gender: string | null
           id: string
+          mentor_name: string | null
           mobile: string | null
           roll_number: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          academic_year?: number | null
           address?: string | null
           age?: string | null
           created_at?: string
           education?: string | null
           gender?: string | null
           id?: string
+          mentor_name?: string | null
           mobile?: string | null
           roll_number: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          academic_year?: number | null
           address?: string | null
           age?: string | null
           created_at?: string
           education?: string | null
           gender?: string | null
           id?: string
+          mentor_name?: string | null
           mobile?: string | null
           roll_number?: string
           updated_at?: string

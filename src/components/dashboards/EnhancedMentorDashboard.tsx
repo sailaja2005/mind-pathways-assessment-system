@@ -1,78 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Users, BarChart3, TrendingUp, Eye, CheckCircle, XCircle, User, Search } from "lucide-react";
-
-// Dummy data for 20 mentors and 400 students
-const generateMentorData = () => {
-  const mentors = [];
-  const students = [];
-  
-  // Generate 20 mentors
-  for (let i = 1; i <= 20; i++) {
-    mentors.push({
-      id: `M${i.toString().padStart(3, '0')}`,
-      name: `Dr. Mentor ${i}`,
-      department: i <= 5 ? 'Computer Science' : i <= 10 ? 'Mathematics' : i <= 15 ? 'Physics' : 'Chemistry'
-    });
-  }
-  
-  // Generate 400 students (20 students per mentor)
-  for (let mentorIndex = 0; mentorIndex < 20; mentorIndex++) {
-    for (let studentIndex = 1; studentIndex <= 20; studentIndex++) {
-      const studentId = mentorIndex * 20 + studentIndex;
-      const isTestCompleted = Math.random() > 0.3; // 70% completion rate
-      
-      students.push({
-        id: `S${studentId.toString().padStart(3, '0')}`,
-        rollNumber: `2024${studentId.toString().padStart(3, '0')}`,
-        name: `Student ${studentId}`,
-        mentorId: mentors[mentorIndex].id,
-        testCompleted: isTestCompleted,
-        testCompletionDate: isTestCompleted ? `2024-01-${Math.floor(Math.random() * 28) + 1}` : null,
-        personalityScores: isTestCompleted ? {
-          openness: Math.round((Math.random() * 2 + 3) * 10) / 10,
-          conscientiousness: Math.round((Math.random() * 2 + 3) * 10) / 10,
-          extraversion: Math.round((Math.random() * 2 + 3) * 10) / 10,
-          agreeableness: Math.round((Math.random() * 2 + 3) * 10) / 10,
-          neuroticism: Math.round((Math.random() * 2 + 1) * 10) / 10
-        } : null,
-        counselorRemarks: isTestCompleted ? [
-          "Excellent academic performance with strong analytical skills.",
-          "Shows leadership potential and excellent teamwork skills.",
-          "Demonstrates creativity and innovative thinking.",
-          "Strong communication skills and collaborative approach.",
-          "Highly motivated with consistent performance.",
-          "Shows empathy and good interpersonal relationships."
-        ][Math.floor(Math.random() * 6)] : null
-      });
-    }
-  }
-  
-  return { mentors, students };
-};
-
-const { mentors, students } = generateMentorData();
 
 const EnhancedMentorDashboard = () => {
   const [selectedMentor, setSelectedMentor] = useState<any>(null);
   const [mentorInput, setMentorInput] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleMentorSearch = () => {
-    const mentor = mentors.find(m => 
-      m.id.toLowerCase() === mentorInput.toLowerCase() || 
-      m.name.toLowerCase().includes(mentorInput.toLowerCase())
-    );
-    setSelectedMentor(mentor);
-    setSelectedStudent(null);
+  useEffect(() => {
+    loadMentors();
+  }, []);
+
+  const loadMentors = async () => {
+    try {
+      const { data: mentorsData, error } = await supabase
+        .from('mentors')
+        .select('*');
+
+      if (error) throw error;
+      setMentors(mentorsData || []);
+    } catch (error) {
+      console.error('Error loading mentors:', error);
+    }
   };
 
-  const getStudentsForMentor = (mentorId: string) => {
-    return students.filter(s => s.mentorId === mentorId);
+  const loadStudentsForMentor = async (mentorName: string) => {
+    try {
+      setLoading(true);
+      const { data: studentsData, error } = await supabase
+        .from('students')
+        .select(`
+          *,
+          personality_results(*)
+        `)
+        .eq('mentor_name', mentorName);
+
+      if (error) throw error;
+      setStudents(studentsData || []);
+    } catch (error) {
+      console.error('Error loading students:', error);
+      toast({
+        title: "Error Loading Students",
+        description: "Failed to load students data.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMentorSearch = async () => {
+    if (!mentorInput.trim()) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a mentor name or ID.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const mentor = mentors.find(m => 
+      m.employee_id?.toLowerCase() === mentorInput.toLowerCase() || 
+      m.name.toLowerCase().includes(mentorInput.toLowerCase().trim())
+    );
+    
+    if (mentor) {
+      setSelectedMentor(mentor);
+      setSelectedStudent(null);
+      await loadStudentsForMentor(mentor.name);
+    } else {
+      toast({
+        title: "Mentor Not Found",
+        description: "No mentor found with the provided name or ID.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleViewResults = (student: any) => {
@@ -110,22 +122,32 @@ const EnhancedMentorDashboard = () => {
               <CardDescription>Big Five Personality Traits</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {Object.entries(selectedStudent.personalityScores).map(([trait, score]) => (
-                  <div key={trait} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium capitalize">{trait}</span>
-                      <span className="text-sm font-bold">{Number(score)}/5</span>
+              {selectedStudent.personality_results && selectedStudent.personality_results.length > 0 ? (
+                <div className="space-y-4">
+                  {[
+                    { name: 'Openness', score: selectedStudent.personality_results[0].openness_score },
+                    { name: 'Conscientiousness', score: selectedStudent.personality_results[0].conscientiousness_score },
+                    { name: 'Extraversion', score: selectedStudent.personality_results[0].extraversion_score },
+                    { name: 'Agreeableness', score: selectedStudent.personality_results[0].agreeableness_score },
+                    { name: 'Neuroticism', score: selectedStudent.personality_results[0].neuroticism_score }
+                  ].map(({ name, score }) => (
+                    <div key={name} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{name}</span>
+                        <span className="text-sm font-bold">{Number(score).toFixed(1)}/5</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-purple-600 h-3 rounded-full transition-all duration-300" 
+                          style={{ width: `${(Number(score) / 5) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-purple-600 h-3 rounded-full transition-all duration-300" 
-                        style={{ width: `${(Number(score) / 5) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No test results available</p>
+              )}
             </CardContent>
           </Card>
 
@@ -136,12 +158,20 @@ const EnhancedMentorDashboard = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label className="font-semibold">Test Completion Date</Label>
-                <p className="text-sm text-gray-600">{selectedStudent.testCompletionDate}</p>
+                <p className="text-sm text-gray-600">
+                  {selectedStudent.personality_results?.[0]?.completed_at 
+                    ? new Date(selectedStudent.personality_results[0].completed_at).toLocaleDateString()
+                    : 'Not completed'
+                  }
+                </p>
               </div>
               <div>
-                <Label className="font-semibold">Counselor Remarks</Label>
-                <div className="bg-emerald-50 p-3 rounded-lg mt-2">
-                  <p className="text-sm text-gray-700">{selectedStudent.counselorRemarks}</p>
+                <Label className="font-semibold">Student Information</Label>
+                <div className="bg-emerald-50 p-3 rounded-lg mt-2 space-y-1">
+                  <p className="text-sm text-gray-700">Roll: {selectedStudent.roll_number}</p>
+                  <p className="text-sm text-gray-700">Age: {selectedStudent.age || 'N/A'}</p>
+                  <p className="text-sm text-gray-700">Academic Year: {selectedStudent.academic_year || 'N/A'}</p>
+                  <p className="text-sm text-gray-700">Education: {selectedStudent.education || 'N/A'}</p>
                 </div>
               </div>
             </CardContent>
@@ -153,16 +183,15 @@ const EnhancedMentorDashboard = () => {
 
   // If mentor is selected, show their students
   if (selectedMentor) {
-    const mentorStudents = getStudentsForMentor(selectedMentor.id);
-    const completedTests = mentorStudents.filter(s => s.testCompleted).length;
-    const completionRate = Math.round((completedTests / mentorStudents.length) * 100);
+    const completedTests = students.filter(s => s.personality_results && s.personality_results.length > 0).length;
+    const completionRate = students.length > 0 ? Math.round((completedTests / students.length) * 100) : 0;
 
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Welcome, {selectedMentor.name}</h2>
-            <p className="text-gray-600">{selectedMentor.department} Department • {mentorStudents.length} Students Assigned</p>
+            <p className="text-gray-600">{selectedMentor.department || 'Department'} • {students.length} Students Assigned</p>
           </div>
           <Button variant="outline" onClick={handleBackToLogin}>
             Switch Mentor
@@ -178,7 +207,7 @@ const EnhancedMentorDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">{mentorStudents.length}</div>
+              <div className="text-3xl font-bold text-purple-600">{students.length}</div>
               <p className="text-sm text-gray-600">Under your supervision</p>
             </CardContent>
           </Card>
@@ -192,7 +221,7 @@ const EnhancedMentorDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">{completedTests}</div>
-              <p className="text-sm text-gray-600">Out of {mentorStudents.length} students</p>
+              <p className="text-sm text-gray-600">Out of {students.length} students</p>
             </CardContent>
           </Card>
 
@@ -216,45 +245,59 @@ const EnhancedMentorDashboard = () => {
             <CardDescription>Monitor psychometric test completion and view results</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {mentorStudents.map((student) => (
-                <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 rounded-full p-2">
-                      <User className="h-5 w-5 text-purple-600" />
+            {loading ? (
+              <div className="text-center py-8">
+                <p>Loading students...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {students.map((student) => {
+                  const hasResults = student.personality_results && student.personality_results.length > 0;
+                  return (
+                    <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-4">
+                        <div className="bg-purple-100 rounded-full p-2">
+                          <User className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Roll: {student.roll_number}</h3>
+                          <p className="text-sm text-gray-600">Year: {student.academic_year || 'N/A'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        {hasResults ? (
+                          <>
+                            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Test Completed
+                            </Badge>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleViewResults(student)}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Results
+                            </Button>
+                          </>
+                        ) : (
+                          <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Test Pending
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{student.name}</h3>
-                      <p className="text-sm text-gray-600">Roll Number: {student.rollNumber}</p>
-                    </div>
+                  );
+                })}
+                {students.length === 0 && !loading && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No students assigned to this mentor.</p>
                   </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    {student.testCompleted ? (
-                      <>
-                        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Test Completed
-                        </Badge>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleViewResults(student)}
-                          className="bg-purple-600 hover:bg-purple-700"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Results
-                        </Button>
-                      </>
-                    ) : (
-                      <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Test Pending
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -318,7 +361,7 @@ const EnhancedMentorDashboard = () => {
           <div className="grid md:grid-cols-2 gap-2 text-sm">
             {mentors.slice(0, 10).map((mentor) => (
               <div key={mentor.id} className="flex justify-between p-2 hover:bg-gray-50 rounded">
-                <span className="font-medium">{mentor.id}</span>
+                <span className="font-medium">{mentor.employee_id || mentor.name}</span>
                 <span className="text-gray-600">{mentor.name}</span>
               </div>
             ))}
